@@ -5,8 +5,23 @@
 #include <regex>
 #include <algorithm>                                                                                
 
+#define C_ALL(X) cbegin(X), cend(X)
+
 using namespace std;
 
+vector<string> split_into_words4(const string& s) {
+    // using regex (THE MOST ROBUST AGAINST THE INPUT)
+    vector<string> res;
+    string pattern = R"(\S+)"; // regular expression to define the search pattern to be matched
+    const regex r(pattern);
+    const vector<smatch> matches{sregex_iterator{C_ALL(s), r}, sregex_iterator{}};  // stores results about matches
+    for(const auto& e : matches) {
+            res.push_back(e.str(0));
+        }
+    
+    return res;
+
+}
 vector<string_view> split_into_words3(string_view str) { 
     // using string view
     //string_view str = s; // copy constructor from string to string_view
@@ -59,8 +74,8 @@ vector<string> split_into_words1(const string& s) {
     
 }
 int main () {
-    string s = "El hombre con el oso   ";
-    auto words = split_into_words3(s);
+    string s = "   El    hombre   con el oso  ";
+    auto words = split_into_words4(s);
     for (const auto& e : words) {
         cout << e << "\n";
     }
