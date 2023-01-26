@@ -38,9 +38,9 @@ void printArray(span<int> arr) {
     }
 }
 */
-/*--------std::ranges-instead-of-iterators------------*/
+/*--------std::ranges-instead-of-iterators-std::views-----------*/
 
-
+/*--------------using Templates ... --------------*/
 int main() {
     vector<char> v = {'a', 'b', 'c'};
     upperCase(begin(v), end(v));
