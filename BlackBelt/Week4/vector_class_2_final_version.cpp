@@ -2,6 +2,7 @@
 #include <utility>
 #include <string>
 #include <exception>
+#include <cassert>
 #include <memory> // std::uninitialized_copy_n() can be used in Vector Copy Constructor istead of excplicit error handling, try-catch statement is already implemented inside
 
 using namespace std;
@@ -11,6 +12,7 @@ template <typename T> void fun(T&& t) {... forward<T>(t)...}
 */
 
 template <typename T>
+// RawMemory is in a Composition relationship with Vector class
 class RawMemory {
 public:
     // this class has overloaded + and [] operators, so it would work similary to a pointer
@@ -67,7 +69,7 @@ public:
 
 template <typename T>
 class Vector {
-private:
+public:
     RawMemory<T> data; 
     size_t sz = 0; // number of occupied memory cells
 
@@ -121,7 +123,7 @@ public:
 template<typename T>
 Vector<T>::Vector(size_t n) : data(n) { // memory allocation happens in list initialization
     sz = n;
-    uninitialized_value_construct_n(data.buf, n);
+    uninitialized_value_construct_n(data.buf, n); // calls default constructor T()
 }
 template<typename T>
 Vector<T>::Vector(const Vector& other) : data(other.sz){
@@ -171,7 +173,7 @@ Vector<T>::~Vector() {
 }
 template <typename T>
 template <typename ... Args> T& Vector<T>::EmplaceBack(Args&& ... args) {
-    if (sz = data.cp) {
+    if (sz == data.cp) {
         // logic which changes the capacity of the vector if neccesary
         Reserve(sz == 0 ? 1 : 2 * sz);
     }
@@ -182,7 +184,7 @@ template <typename ... Args> T& Vector<T>::EmplaceBack(Args&& ... args) {
 // Strong Exception Guarantee
 template <typename T>
 void Vector<T>::PushBack(const T& elem) {
-    if (sz = data.cp) {
+    if (sz == data.cp) {
         // logic which changes the capacity of the vector if neccesary
         Reserve(sz == 0 ? 1 : 2 * sz);
     }
@@ -193,7 +195,7 @@ void Vector<T>::PushBack(const T& elem) {
 // Strong Exception Guarantee
 template <typename T>
 void Vector<T>::PushBack(T&& elem) {
-    if (sz = data.cp) {
+    if (sz == data.cp) {
         // logic which changes the capacity of the vector if neccesary
         Reserve(sz == 0 ? 1 : 2 * sz);
     }
@@ -224,7 +226,7 @@ void Vector<T>::Resize(size_t n) {
 template <typename T>
 void Vector<T>::Reserve(size_t n) {
     // Let us increase capacity (Raw memory) of an existing vector
-    if (data.cp < n) { 
+    if ( data.cp < n ) { 
         RawMemory<T> data1(n);
         uninitialized_move_n(data.buf, sz, data1.buf);
        destroy_n(data.buf, sz); // Destroy T object in the old chunk of memory 
@@ -234,14 +236,15 @@ void Vector<T>::Reserve(size_t n) {
 
 
 struct Student {
-    string Name;
-    double Rating;
+    string Name = "";
+    double Rating = 0.0;
     Student() = default;
     // eplicit requares explicetly write initialization like Student(), and not just {..., ...}
     explicit Student(string name, double rating) : Name(name), Rating(rating) {}
     void Print() const {
         cout << Name << " " << Rating << "\n";
     }
+
     Student(const Student& s) {
         this -> Name = s.Name;
         this -> Rating = s.Rating;
@@ -257,39 +260,41 @@ struct Student {
     }
 };
 
-struct Test {
+struct ExceptClass {
     // User defined type where exceptions might occur
     // So we need to handle those exceptions in the class that uses Test struct i.e. in Vector class
     inline static size_t numObj = 0;
     inline static size_t created = 0;
     inline static size_t deleted = 0;
-    Test() {
+    ExceptClass() {
         ++numObj;
         ++created;
         if (numObj > 5)
             throw runtime_error("Too many objects!");
     }
-    Test(const Test&) {
+    ExceptClass(const ExceptClass&) {
         ++numObj;
         ++created;
         if (numObj > 5)
             throw runtime_error("Too many objects!");
 
     }
-    ~Test() {
+    ~ExceptClass() {
         ++deleted;
         --numObj;
     }
 }; 
 
 int main() {
-    Vector<Student> v;
+    Vector<Student> v(0);
+    //assert(v.data.buf == nullptr);
+    cout << v.Size() << v.Capacity() << endl;
     v.PushBack(Student("Oleg", 3.0));
-    v.PushBack(Student("Oleg1", 3.1));
-    //v.EmplaceBack("Dima", 3.0);
-    cout << "Size: " << v.Size() << " Capacity: " << v.Capacity() << endl;
-    //cout << v[0] << endl;
-    cout << v[0] << " " << v[1] << endl;
-
+    cout << v.Size() << v.Capacity() << endl;
+    v.EmplaceBack("Oleg1", 3.1);
+    cout << v.Size() << v.Capacity() << endl;
+    for(auto& e : v) {
+        cout << e << endl;
+    }
     return  0;
 }

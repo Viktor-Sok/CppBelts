@@ -92,7 +92,8 @@ public:
 template <typename T>
 // CONSTRUCTOR for Lvalue parameter
 Optional<T>::Optional(const T& elem) {
-    t = new (data) T(elem);
+    //t = new (data) T(elem);
+    new (data) T(elem);
     //memcpy(data, T, sizeof(T)); // copying will happen, copy initialization should work for type T
     defined = true; 
 }
